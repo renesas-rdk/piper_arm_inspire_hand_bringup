@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- Flange macro for mounting end effectors -->
+  <xacro:macro name="flange" params="prefix parent_link flange_radius:=0.025 flange_length:=0.015 flange_mass:=0.05 *origin">
+
+    <!-- Flange link for mounting end effectors -->
+    <link name="${prefix}flange">
+      <visual>
+        <origin xyz="0 0 ${flange_length/2}" rpy="0 0 0"/>
+        <geometry>
+          <cylinder radius="${flange_radius}" length="${flange_length}"/>
+        </geometry>
+        <material name="gray">
+          <color rgba="0.5 0.5 0.5 1.0"/>
+        </material>
+      </visual>
+      <collision>
+        <origin xyz="0 0 ${flange_length/2}" rpy="0 0 0"/>
+        <geometry>
+          <cylinder radius="${flange_radius}" length="${flange_length}"/>
+        </geometry>
+      </collision>
+      <inertial>
+        <origin xyz="0 0 ${flange_length/2}" rpy="0 0 0"/>
+        <mass value="${flange_mass}"/>
+        <!-- Inertia for cylinder: Ixx = Iyy = (1/12)*m*(3*r^2 + h^2), Izz = (1/2)*m*r^2 -->
+        <inertia
+          ixx="${(1/12) * flange_mass * (3 * flange_radius * flange_radius + flange_length * flange_length)}"
+          ixy="0" ixz="0"
+          iyy="${(1/12) * flange_mass * (3 * flange_radius * flange_radius + flange_length * flange_length)}"
+          iyz="0"
+          izz="${(1/2) * flange_mass * flange_radius * flange_radius}"/>
+      </inertial>
+    </link>
+
+    <!-- Joint connecting parent to flange -->
+    <joint name="${prefix}${parent_link}_to_flange" type="fixed">
+      <parent link="${parent_link}"/>
+      <child link="${prefix}flange"/>
+      <xacro:insert_block name="origin"/>
+    </joint>
+
+  </xacro:macro>
+
+</robot>

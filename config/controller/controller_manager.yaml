@@ -1,0 +1,31 @@
+# ROS 2 Controller Manager Configuration for Agilex Piper Arm
+# This file defines the controller manager settings and available controllers
+
+controller_manager:
+  ros__parameters:
+    update_rate: 100  # Hz - Main control loop frequency
+
+    # Use the ROS 2 parameter server for configuration
+    use_sim_time: false
+
+    # Available controllers (not all need to be loaded at once)
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    # Position-based controllers
+    agilex_piper_joint_trajectory_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+
+    # Joint position controller for direct position commands
+    agilex_piper_joint_position_controller:
+      type: position_controllers/JointGroupPositionController
+
+    # Cartesian controllers for advanced manipulation
+    agilex_piper_cartesian_motion_controller:
+      type: cartesian_motion_controller/CartesianMotionController
+
+    agilex_piper_motion_control_handle:
+      type: cartesian_controller_handles/MotionControlHandle
+
+    inspire_rh56_hand_joint_position_controller:
+      type: position_controllers/JointGroupPositionController

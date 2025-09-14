@@ -1,0 +1,21 @@
+# Joint Position Controller Configuration for Agilex Piper Arm
+# This controller provides direct position commands to individual joints
+
+agilex_piper_joint_position_controller:
+  ros__parameters:
+    # Joint specification
+    joints:
+      - joint1  # Base rotation
+      - joint2  # Shoulder
+      - joint3  # Elbow
+      - joint4  # Wrist 1
+      - joint5  # Wrist 2
+      - joint6  # Wrist 3
+
+    # Interface configuration
+    interface_name: position
+
+    # Command timeout (safety feature)
+    # If no command is received within this time, the controller will stop
+    # Set to 0.0 to disable timeout
+    command_timeout: 0.2  # seconds

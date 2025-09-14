@@ -1,0 +1,37 @@
+# Cartesian Motion Controller Configuration for Agilex Piper Arm
+# This controller provides Cartesian space motion control without force feedback
+
+agilex_piper_cartesian_motion_controller:
+  ros__parameters:
+    # Robot kinematic configuration
+    end_effector_link: "tcp"       # End-effector frame
+    robot_base_link: "base_link"   # Robot base frame
+
+    # Controlled joints
+    joints:
+      - joint1
+      - joint2
+      - joint3
+      - joint4
+      - joint5
+      - joint6
+
+    # Interface specification
+    command_interfaces:
+      - position
+
+    # Solver configuration for inverse kinematics
+    solver:
+      error_scale: 1.0              # Overall error scaling factor
+      iterations: 20                # Max iterations per solve cycle
+      publish_state_feedback: true  # Publish controller state
+
+    # Cartesian PD gains for each degree of freedom
+    # Higher values = more responsive, lower values = smoother
+    pd_gains:
+      trans_x: {p: 15.0, d: 1.0}   # X translation gains
+      trans_y: {p: 15.0, d: 1.0}   # Y translation gains
+      trans_z: {p: 15.0, d: 1.0}   # Z translation gains
+      rot_x: {p: 8.0, d: 0.5}      # X rotation gains
+      rot_y: {p: 8.0, d: 0.5}      # Y rotation gains
+      rot_z: {p: 8.0, d: 0.5}      # Z rotation gains

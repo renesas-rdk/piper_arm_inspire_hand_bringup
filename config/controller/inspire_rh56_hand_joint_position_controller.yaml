@@ -1,0 +1,21 @@
+# Joint Group Position Controller Configuration for Inspire RH56 Hand
+# This controller provides direct position commands to all hand joints
+
+inspire_rh56_hand_joint_position_controller:
+  ros__parameters:
+    # Joint specification
+    joints:
+      - thumb_proximal_yaw_joint     # Thumb yaw
+      - thumb_proximal_pitch_joint   # Thumb pitch/flex
+      - index_proximal_joint         # Index finger flex
+      - middle_proximal_joint        # Middle finger flex
+      - ring_proximal_joint          # Ring finger flex
+      - pinky_proximal_joint         # Pinky finger flex
+
+    # Interface configuration
+    interface_name: position
+
+    # Command timeout (safety feature)
+    # If no command is received within this time, the controller will stop
+    # Set to 0.0 to disable timeout
+    command_timeout: 0.5  # seconds

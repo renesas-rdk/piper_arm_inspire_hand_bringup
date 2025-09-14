@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="piper_arm_inspire_hand_right">
+
+  <!-- Include the arm and hand macros -->
+  <xacro:include filename="$(find agilex_piper_arm_description)/urdf/agilex_piper_arm_macro.xacro" />
+  <xacro:include filename="$(find inspire_rh56_hand_description)/urdf/inspire_hand_right_macro.xacro" />
+  <xacro:include filename="$(find piper_arm_inspire_hand_bringup)/urdf/flange_macro.xacro" />
+
+  <!-- Include ros2_control configurations -->
+  <xacro:include filename="$(find agilex_piper_ros2_control)/urdf/agilex_piper_macro.ros2_control.xacro" />
+  <xacro:include filename="$(find inspire_rh56_hand_ros2_control)/urdf/inspire_rh56_hand_macro.ros2_control.xacro" />
+
+  <!-- Arguments for ros2_control configurations -->
+  <xacro:arg name="can_interface" default="can0"/>
+  <xacro:arg name="serial_port" default="/dev/ttyUSB0"/>
+  <xacro:arg name="baudrate" default="115200"/>
+  <xacro:arg name="use_mock_hardware" default="false"/>
+  <xacro:arg name="prefix" default=""/>
+
+  <!-- World link for fixing robot to ground -->
+  <link name="world"/>
+
+  <!-- Instantiate the arm -->
+  <xacro:agilex_piper_arm prefix="$(arg prefix)" parent="world">
+    <origin xyz="0 0 0" rpy="0 0 0" />
+  </xacro:agilex_piper_arm>
+
+  <!-- Instantiate the flange -->
+  <xacro:flange prefix="$(arg prefix)" parent_link="$(arg prefix)tool0"
+    flange_radius="0.025"
+    flange_length="0.015"
+    flange_mass="0.05">
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </xacro:flange>
+
+  <!-- Instantiate the right hand attached to the flange link -->
+  <xacro:inspire_hand_right prefix="" parent="$(arg prefix)flange">
+    <origin xyz="0 0 0.015" rpy="0 0 0"/>
+  </xacro:inspire_hand_right>
+
+  <!-- Add ros2_control for the arm -->
+  <xacro:agilex_piper_ros2_control
+    name="agilex_piper_arm"
+    can_interface="$(arg can_interface)"
+    use_mock_hardware="$(arg use_mock_hardware)"
+    include_gripper="false"
+    prefix="$(arg prefix)"/>
+
+  <!-- Add ros2_control for the hand -->
+  <xacro:inspire_rh56_hand_ros2_control
+    name="inspire_rh56_hand"
+    serial_port="$(arg serial_port)"
+    baudrate="$(arg baudrate)"
+    use_mock_hardware="$(arg use_mock_hardware)"
+    prefix="$(arg prefix)"
+  />
+
+</robot>

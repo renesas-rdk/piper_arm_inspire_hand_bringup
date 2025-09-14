@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>piper_arm_inspire_hand_bringup</name>
+  <version>1.0.0</version>
+  <description>Launch and config files for starting the robot using ros2_control</description>
+  <maintainer email="baoan.du.xj@renesas.com">Baoan Du</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <!-- Controller manager and standard controllers -->
+  <exec_depend>ros2_control</exec_depend>
+  <exec_depend>ros2_controllers</exec_depend>
+  <exec_depend>controller_manager</exec_depend>
+  <exec_depend>joint_state_broadcaster</exec_depend>
+  <exec_depend>joint_trajectory_controller</exec_depend>
+  <exec_depend>position_controllers</exec_depend>
+
+  <!-- Cartesian controllers -->
+  <exec_depend>cartesian_controller_base</exec_depend>
+  <exec_depend>cartesian_motion_controller</exec_depend>
+
+  <!-- Hardware interface -->
+  <exec_depend>agilex_piper_ros2_control</exec_depend>
+  <exec_depend>inspire_rh56_hand_ros2_control</exec_depend>
+
+  <!-- Robot description dependencies -->
+  <exec_depend>robot_state_publisher</exec_depend>
+  <exec_depend>joint_state_publisher</exec_depend>
+  <exec_depend>xacro</exec_depend>
+  <exec_depend>agilex_piper_arm_description</exec_depend>
+  <exec_depend>inspire_rh56_hand_description</exec_depend>
+
+  <!-- Launch file dependencies -->
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>foxglove_bridge</exec_depend>
+
+  <!-- Python dependencies -->
+  <exec_depend>ament_index_python</exec_depend>
+
+  <!-- Testing dependencies -->
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

@@ -1,0 +1,60 @@
+# Joint Trajectory Controller Configuration for Agilex Piper Arm
+# This controller provides standard joint-space trajectory following
+
+agilex_piper_joint_trajectory_controller:
+  ros__parameters:
+    # Joint specification
+    joints:
+      - joint1  # Base rotation
+      - joint2  # Shoulder
+      - joint3  # Elbow
+      - joint4  # Wrist 1
+      - joint5  # Wrist 2
+      - joint6  # Wrist 3
+
+    # Interface configuration
+    command_interfaces:
+      - position
+
+    state_interfaces:
+      - position
+      - velocity
+
+    # Action server configuration
+    action_monitor_rate: 20.0  # Hz - Rate to monitor action goals
+
+    # Trajectory tolerance and timing
+    constraints:
+      stopped_velocity_tolerance: 0.02  # rad/s - Max velocity to consider stopped
+      goal_time: 0.5                    # s - Time tolerance for reaching goal
+
+      # Individual joint tolerances during trajectory execution
+      joint1:
+        trajectory: 0.1  # rad - Max position error during trajectory
+        goal: 0.05       # rad - Max position error at goal
+      joint2:
+        trajectory: 0.1
+        goal: 0.05
+      joint3:
+        trajectory: 0.1
+        goal: 0.05
+      joint4:
+        trajectory: 0.1
+        goal: 0.05
+      joint5:
+        trajectory: 0.1
+        goal: 0.05
+      joint6:
+        trajectory: 0.1
+        goal: 0.05
+
+    # Trajectory execution parameters
+    allow_partial_joints_goal: false      # Require all joints in goal
+    allow_integration_in_goal_trajectories: true  # Allow continuous trajectories
+
+    # State tolerance (for preemption detection)
+    state_publish_rate: 50.0  # Hz - Rate to publish controller state
+
+    # Open loop control (no PID, just position commands)
+    open_loop_control: true
+    allow_nonzero_velocity_at_trajectory_end: false

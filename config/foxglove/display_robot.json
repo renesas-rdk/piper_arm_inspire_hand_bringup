@@ -1,0 +1,107 @@
+{
+  "configById": {
+    "3D!1du8q22": {
+      "cameraState": {
+        "perspective": true,
+        "distance": 1.0746709196546926,
+        "phi": 65.4546027528734,
+        "thetaOffset": -7.270783417710338,
+        "targetOffset": [
+          0,
+          0,
+          0
+        ],
+        "target": [
+          0,
+          0,
+          0
+        ],
+        "targetOrientation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "fovy": 45,
+        "near": 0.1,
+        "far": 5000
+      },
+      "followMode": "follow-none",
+      "scene": {
+        "meshUpAxis": "z_up",
+        "transforms": {
+          "editable": false,
+          "showLabel": false,
+          "labelSize": 0.06,
+          "axisScale": 0.25,
+          "lineWidth": 1,
+          "visible": false
+        },
+        "backgroundColor": "#272727"
+      },
+      "transforms": {},
+      "topics": {},
+      "layers": {
+        "grid": {
+          "visible": true,
+          "frameLocked": true,
+          "label": "Grid",
+          "instanceId": "f512ec82-367b-4004-a84d-17320938a01b",
+          "layerId": "foxglove.Grid",
+          "size": 10,
+          "divisions": 10,
+          "lineWidth": 1,
+          "color": "#248eff",
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ]
+        },
+        "7975a5bb-b268-4159-8b37-450138690126": {
+          "displayMode": "auto",
+          "fallbackColor": "#ffffff",
+          "showAxis": false,
+          "showOutlines": true,
+          "visible": true,
+          "frameLocked": true,
+          "instanceId": "7975a5bb-b268-4159-8b37-450138690126",
+          "label": "URDF",
+          "layerId": "foxglove.Urdf",
+          "sourceType": "topic",
+          "url": "",
+          "filePath": "",
+          "parameter": "",
+          "topic": "/robot_description",
+          "framePrefix": "",
+          "order": 1,
+          "links": {},
+          "axisScale": 1,
+          "opacity": 1
+        }
+      },
+      "publish": {
+        "type": "point",
+        "poseTopic": "/move_base_simple/goal",
+        "pointTopic": "/clicked_point",
+        "poseEstimateTopic": "/initialpose",
+        "poseEstimateXDeviation": 0.5,
+        "poseEstimateYDeviation": 0.5,
+        "poseEstimateThetaDeviation": 0.26179939
+      },
+      "imageMode": {},
+      "followTf": "world"
+    }
+  },
+  "globalVariables": {},
+  "userNodes": {},
+  "playbackConfig": {
+    "speed": 1
+  },
+  "layout": "3D!1du8q22"
+}
