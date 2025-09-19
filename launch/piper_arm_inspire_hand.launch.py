@@ -134,6 +134,8 @@ def launch_setup(context, *args, **kwargs) -> List[Node]:
             parameters=[
                 robot_description,
                 controller_config,
+                cartesian_motion_config,
+                hand_position_config
             ],
             remappings=[
                 ('/controller_manager/robot_description', '/robot_description'),
@@ -164,7 +166,6 @@ def launch_setup(context, *args, **kwargs) -> List[Node]:
             arguments=[
                 'agilex_piper_cartesian_motion_controller',
                 '--controller-manager', '/controller_manager',
-                '--param-file', cartesian_motion_config,
             ],
         ),
         # Hand position controller
@@ -176,7 +177,6 @@ def launch_setup(context, *args, **kwargs) -> List[Node]:
             arguments=[
                 'inspire_rh56_hand_joint_position_controller',
                 '--controller-manager', '/controller_manager',
-                '--param-file', hand_position_config,
             ],
         ),
         # Foxglove bridge for web-based visualization
