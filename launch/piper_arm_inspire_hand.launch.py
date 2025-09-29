@@ -24,6 +24,7 @@ This launch file starts:
 - joint_state_broadcaster: Publishes joint states from both arm and hand hardware
 - cartesian_motion_controller: Provides Cartesian space motion control for the arm
 - hand_position_controller: Provides direct position commands for hand joints
+- gpio_controller: Provides extended arm features (administrative control, pose feedback, status monitoring)
 - foxglove_bridge: WebSocket bridge for Foxglove Studio visualization
 
 Usage:
@@ -50,6 +51,15 @@ Test Cartesian motion commands in another terminal with:
 
 Test hand position commands:
   ros2 topic pub -1 /inspire_rh56_hand_joint_position_controller/commands std_msgs/msg/Float64MultiArray "{data: [1.3, 0.6, 0.0, 0.0, 1.4, 1.4]}"
+
+Test extended arm features with GPIO controller:
+  # Enable arm functionality
+  ros2 topic pub --once /agilex_piper_gpio_controller/commands
+    control_msgs/msg/DynamicInterfaceGroupValues
+    "{interface_groups: ['arm_admin'], interface_values: [{interface_names: ['enable_arm'], values: [1.0]}]}"
+
+  # Monitor pose feedback during motion
+  ros2 topic echo /agilex_piper_gpio_controller/gpio_states
 
 Observe the integrated system moving in Foxglove Studio.
 
@@ -105,11 +115,17 @@ def launch_setup(context, *args, **kwargs) -> List[Node]:
 
     # Controller configurations from local package
     controller_config = os.path.join(
-        pkg_share, 'config', 'controller', 'controller_manager.yaml'
+        pkg_share, 'config', 'controller',
+        'controller_manager_mock.yaml' if use_mock_hardware_value.lower() == 'true'
+        else 'controller_manager.yaml'
     )
 
     cartesian_motion_config = os.path.join(
         pkg_share, 'config', 'controller', 'agilex_piper_cartesian_motion_controller.yaml'
+    )
+
+    gpio_config = os.path.join(
+        pkg_share, 'config', 'controller', 'agilex_piper_gpio_controller.yaml'
     )
 
     hand_position_config = os.path.join(
@@ -135,7 +151,8 @@ def launch_setup(context, *args, **kwargs) -> List[Node]:
                 robot_description,
                 controller_config,
                 cartesian_motion_config,
-                hand_position_config
+                gpio_config,
+                hand_position_config,
             ],
             remappings=[
                 ('/controller_manager/robot_description', '/robot_description'),
@@ -165,6 +182,17 @@ def launch_setup(context, *args, **kwargs) -> List[Node]:
             output='screen',
             arguments=[
                 'agilex_piper_cartesian_motion_controller',
+                '--controller-manager', '/controller_manager',
+            ],
+        ),
+        # GPIO controller for extended arm features
+        Node(
+            package='controller_manager',
+            executable='spawner',
+            name='gpio_controller_spawner',
+            output='screen',
+            arguments=[
+                'agilex_piper_gpio_controller',
                 '--controller-manager', '/controller_manager',
             ],
         ),

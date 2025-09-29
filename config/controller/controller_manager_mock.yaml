@@ -9,7 +9,7 @@ controller_manager:
     use_sim_time: false
 
     # Turn on clamping
-    enforce_command_limits: false
+    enforce_command_limits: true
 
     # Available controllers (not all need to be loaded at once)
     joint_state_broadcaster:

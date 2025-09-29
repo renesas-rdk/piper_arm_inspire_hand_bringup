@@ -1,0 +1,63 @@
+# GPIO Controller Configuration for Agilex Piper Arm
+# This controller manages extended arm features including administrative control,
+# end effector pose feedback, and comprehensive status monitoring
+
+agilex_piper_gpio_controller:
+  ros__parameters:
+    # GPIO interface configuration for extended arm features
+    gpios:
+      - arm_admin         # Administrative control (enable/disable arm)
+      - arm_current_pose  # End effector pose feedback (x, y, z, rx, ry, rz)
+      - arm_target_pose   # Target pose commands (Cartesian mode only)
+      - arm_status        # Comprehensive arm status monitoring
+      - arm_motion_mode   # Built-in motion mode control (joint/cartesian)
+
+    # Command interfaces for each GPIO
+    command_interfaces:
+      arm_admin:
+        - interfaces:
+          - enable_arm     # Enable/disable arm functionality
+      arm_target_pose:
+        - interfaces:
+          # Target pose commands (only valid in built-in Cartesian motion mode)
+          - x              # Target X position (meters)
+          - "y"            # Target Y position (meters)
+          - z              # Target Z position (meters)
+          - rx             # Target roll rotation (radians)
+          - ry             # Target pitch rotation (radians)
+          - rz             # Target yaw rotation (radians)
+      arm_motion_mode:
+        - interfaces:
+          - mode           # Built-in motion mode: 0=Cartesian, 1=Joint
+          - speed          # Speed percentage (1-100)
+
+    # State interfaces for each GPIO
+    state_interfaces:
+      arm_admin:
+        - interfaces:
+          - enable_arm     # Current arm enable state
+          - connected      # Hardware connection status
+      arm_current_pose:
+        - interfaces:
+          # Current end effector pose feedback
+          - x              # Current X position (meters)
+          - "y"            # Current Y position (meters)
+          - z              # Current Z position (meters)
+          - rx             # Current roll rotation (radians)
+          - ry             # Current pitch rotation (radians)
+          - rz             # Current yaw rotation (radians)
+      arm_status:
+        - interfaces:
+          # Comprehensive status monitoring
+          - ctrl_mode      # Control mode (0x00=Standby, 0x01=CAN, 0x02=Teaching)
+          - arm_status     # Arm status code
+          - mode_feed      # Mode feedback
+          - teach_status   # Teaching mode status
+          - motion_status  # Motion execution status
+          - trajectory_num # Current trajectory number
+          - err_code_comm  # Communication error code
+          - err_code_angle # Angle error code
+      arm_motion_mode:
+        - interfaces:
+          - mode           # Current motion mode
+          - speed          # Current speed percentage
