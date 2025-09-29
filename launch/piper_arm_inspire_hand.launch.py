@@ -24,6 +24,7 @@ This launch file starts:
 - joint_state_broadcaster: Publishes joint states from both arm and hand hardware
 - cartesian_motion_controller: Provides Cartesian space motion control for the arm
 - hand_position_controller: Provides direct position commands for hand joints
+- hand_gripper_action_adapter: Converts gripper commands to hand joint positions
 - gpio_controller: Provides extended arm features (administrative control, pose feedback, status monitoring)
 - foxglove_bridge: WebSocket bridge for Foxglove Studio visualization
 
@@ -38,6 +39,10 @@ Usage:
   # For SIMULATION/TESTING without physical hardware (RECOMMENDED for testing):
   ros2 launch piper_arm_inspire_hand_bringup piper_arm_inspire_hand.launch.py use_mock_hardware:=true
 
+  # Use different gripper configurations:
+  ros2 launch piper_arm_inspire_hand_bringup piper_arm_inspire_hand.launch.py gripper_mapping:=gripper_joint_mapping_2finger.yaml
+  ros2 launch piper_arm_inspire_hand_bringup piper_arm_inspire_hand.launch.py gripper_mapping:=gripper_joint_mapping_3finger.yaml
+
   Then connect Foxglove Studio to ws://<foxglove_bridge_ip>:8765
 
 Test Cartesian motion commands in another terminal with:
@@ -49,8 +54,13 @@ Test Cartesian motion commands in another terminal with:
     }
   }"
 
-Test hand position commands:
+Test hand commands:
+  # Direct joint control:
   ros2 topic pub -1 /inspire_rh56_hand_joint_position_controller/commands std_msgs/msg/Float64MultiArray "{data: [1.3, 0.6, 0.0, 0.0, 1.4, 1.4]}"
+
+  # Gripper command interface:
+  ros2 topic pub -1 /hand_gripper_command control_msgs/msg/GripperCommand "{position: 0.03, max_effort: 10.0}"
+  ros2 action send_goal /hand_gripper_cmd control_msgs/action/ParallelGripperCommand "{command: {position: [0.025], effort: [10.0]}}"
 
 Test extended arm features with GPIO controller:
   # Enable arm functionality
@@ -86,6 +96,7 @@ def launch_setup(context, *args, **kwargs) -> List[Node]:
     baudrate_value = LaunchConfiguration('baudrate').perform(context)
     use_mock_hardware_value = LaunchConfiguration('use_mock_hardware').perform(context)
     hand_side_value = LaunchConfiguration('hand_side').perform(context)
+    gripper_mapping_value = LaunchConfiguration('gripper_mapping').perform(context)
 
     # Get package directories
     pkg_share = get_package_share_directory('piper_arm_inspire_hand_bringup')
@@ -207,6 +218,22 @@ def launch_setup(context, *args, **kwargs) -> List[Node]:
                 '--controller-manager', '/controller_manager',
             ],
         ),
+        # Hand gripper action adapter for gripper command interface
+        Node(
+            package='inspire_rh56_hand_utils',
+            executable='hand_gripper_action_adapter',
+            name='hand_gripper_action_adapter',
+            output='screen',
+            parameters=[
+                {
+                    'action_server_name': 'gripper_cmd',
+                    'gripper_command_topic': 'gripper_command',
+                    'position_controller_topic': '/inspire_rh56_hand_joint_position_controller/commands',
+                    'mapping_config_file': gripper_mapping_value,
+                    'execution_duration': 1.0,
+                }
+            ],
+        ),
         # Foxglove bridge for web-based visualization
         IncludeLaunchDescription(
             FrontendLaunchDescriptionSource(foxglove_bridge_launch)
@@ -249,11 +276,18 @@ def generate_launch_description() -> LaunchDescription:
         description='Which hand to control: left or right'
     )
 
+    gripper_mapping_arg = DeclareLaunchArgument(
+        'gripper_mapping',
+        default_value='gripper_joint_mapping_3finger.yaml',
+        description='Gripper mapping configuration: gripper_joint_mapping_3finger.yaml or gripper_joint_mapping_2finger.yaml'
+    )
+
     return LaunchDescription([
         can_interface_arg,
         serial_port_arg,
         baudrate_arg,
         use_mock_hardware_arg,
         hand_side_arg,
+        gripper_mapping_arg,
         OpaqueFunction(function=launch_setup)
     ])
