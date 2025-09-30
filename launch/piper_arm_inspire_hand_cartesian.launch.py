@@ -16,37 +16,65 @@
 # ********************************************************************************************************************
 
 """
-Launch file for Agilex Piper Arm with Inspire RH56 Hand integrated system.
+Launch file for Agilex Piper Arm with Inspire RH56 Hand integrated system using ROS2 Cartesian controllers.
 
 This launch file starts:
 - ros2_control_node: Main controller manager for both arm and hand hardware interfaces
 - robot_state_publisher: Publishes TF transforms from combined URDF
 - joint_state_broadcaster: Publishes joint states from both arm and hand hardware
-- cartesian_motion_controller: Provides Cartesian space motion control for the arm
+- cartesian_motion_controller: Provides ROS2 Cartesian space motion control for the arm
 - hand_position_controller: Provides direct position commands for hand joints
 - hand_gripper_action_adapter: Converts gripper commands to hand joint positions
 - gpio_controller: Provides extended arm features (administrative control, pose feedback, status monitoring)
 - foxglove_bridge: WebSocket bridge for Foxglove Studio visualization
 
+Key differences from native control launch:
+- Uses ROS2 Cartesian motion controller instead of native hardware control
+- Supports mock hardware simulation for testing
+- Compatible with standard ROS2 control ecosystem
+- Suitable for applications requiring ROS2-based motion planning integration
+
+Parameters:
+  can_interface (string, default='can2'):
+    CAN interface name for arm hardware communication (e.g., 'can0', 'can1', 'can2').
+    Only relevant when use_mock_hardware=false.
+
+  serial_port (string, default='/dev/ttyUSB0'):
+    Serial port for hand communication.
+
+  baudrate (string, default='115200'):
+    Baudrate for hand serial communication.
+
+  use_mock_hardware (bool, default='false'):
+    Enable mock hardware simulation for testing without physical robot.
+    Set to 'true' for safe testing and development.
+
+  hand_side (string, default='left'):
+    Which hand to control: 'left' or 'right'.
+
+  gripper_mapping (string, default='gripper_joint_mapping_3finger.yaml'):
+    Gripper mapping configuration file for hand gripper interface.
+
 Usage:
   # For physical robot with CAN and serial interfaces:
-  ros2 launch piper_arm_inspire_hand_bringup piper_arm_inspire_hand.launch.py
-  ros2 launch piper_arm_inspire_hand_bringup piper_arm_inspire_hand.launch.py can_interface:=can1 serial_port:=/dev/ttyUSB1
+  ros2 launch piper_arm_inspire_hand_bringup piper_arm_inspire_hand_cartesian.launch.py
+  ros2 launch piper_arm_inspire_hand_bringup piper_arm_inspire_hand_cartesian.launch.py can_interface:=can1 serial_port:=/dev/ttyUSB1
 
   # For right hand configuration:
-  ros2 launch piper_arm_inspire_hand_bringup piper_arm_inspire_hand.launch.py hand_side:=right
+  ros2 launch piper_arm_inspire_hand_bringup piper_arm_inspire_hand_cartesian.launch.py hand_side:=right
 
   # For SIMULATION/TESTING without physical hardware (RECOMMENDED for testing):
-  ros2 launch piper_arm_inspire_hand_bringup piper_arm_inspire_hand.launch.py use_mock_hardware:=true
+  ros2 launch piper_arm_inspire_hand_bringup piper_arm_inspire_hand_cartesian.launch.py use_mock_hardware:=true
 
   # Use different gripper configurations:
-  ros2 launch piper_arm_inspire_hand_bringup piper_arm_inspire_hand.launch.py gripper_mapping:=gripper_joint_mapping_2finger.yaml
-  ros2 launch piper_arm_inspire_hand_bringup piper_arm_inspire_hand.launch.py gripper_mapping:=gripper_joint_mapping_3finger.yaml
+  ros2 launch piper_arm_inspire_hand_bringup piper_arm_inspire_hand_cartesian.launch.py gripper_mapping:=gripper_joint_mapping_2finger.yaml
+  ros2 launch piper_arm_inspire_hand_bringup piper_arm_inspire_hand_cartesian.launch.py gripper_mapping:=gripper_joint_mapping_3finger.yaml
 
   Then connect Foxglove Studio to ws://<foxglove_bridge_ip>:8765
 
-Test Cartesian motion commands in another terminal with:
-  ros2 topic pub -1 /agilex_piper_cartesian_motion_controller/target_frame geometry_msgs/msg/PoseStamped "{
+Test ROS2 Cartesian motion commands:
+  ros2 topic pub --once /agilex_piper_cartesian_motion_controller/target_frame geometry_msgs/msg/PoseStamped "
+  {
     header: {frame_id: 'base_link'},
     pose: {
       position: {x: 0.2, y: 0.0, z: 0.2},
@@ -54,26 +82,30 @@ Test Cartesian motion commands in another terminal with:
     }
   }"
 
-Test hand commands:
-  # Direct joint control:
-  ros2 topic pub -1 /inspire_rh56_hand_joint_position_controller/commands std_msgs/msg/Float64MultiArray "{data: [1.3, 0.6, 0.0, 0.0, 1.4, 1.4]}"
+  # Monitor current pose and arm status
+  ros2 topic echo /agilex_piper_gpio_controller/gpio_states
 
-  # Gripper command interface:
-  ros2 topic pub -1 /hand_gripper_command control_msgs/msg/GripperCommand "{position: 0.03, max_effort: 10.0}"
-  ros2 action send_goal /hand_gripper_cmd control_msgs/action/ParallelGripperCommand "{command: {position: [0.025], effort: [10.0]}}"
-
-Test extended arm features with GPIO controller:
-  # Enable arm functionality
+  # Enable/disable arm
   ros2 topic pub --once /agilex_piper_gpio_controller/commands
     control_msgs/msg/DynamicInterfaceGroupValues
     "{interface_groups: ['arm_admin'], interface_values: [{interface_names: ['enable_arm'], values: [1.0]}]}"
 
-  # Monitor pose feedback during motion
-  ros2 topic echo /agilex_piper_gpio_controller/gpio_states
+Test hand commands:
+  # Direct joint control:
+  ros2 topic pub --once /inspire_rh56_hand_joint_position_controller/commands std_msgs/msg/Float64MultiArray "{data: [1.3, 0.6, 0.0, 0.0, 1.4, 1.4]}"
 
-Observe the integrated system moving in Foxglove Studio.
+  # Use standard gripper action interface:
+  ros2 action send_goal /hand_gripper_cmd control_msgs/action/ParallelGripperCommand "{command: {position: [0.025], effort: [10.0]}}"
+
+  # Or use simple topic interface:
+  ros2 topic pub /hand_gripper_command control_msgs/msg/GripperCommand "{position: 0.03, max_effort: 10.0}"
+
+Or use Foxglove Studio's native publisher panel for interactive control.
+
+Observe the integrated system moving in Foxglove Studio visualization.
 
 NOTE: Use 'use_mock_hardware:=true' for simulation or safe testing without physical hardware!
+      For native hardware Cartesian control, use piper_arm_inspire_hand_native_cartesian.launch.py
 """
 
 import os
@@ -152,7 +184,7 @@ def launch_setup(context, *args, **kwargs) -> List[Node]:
 
     # Nodes
     nodes: List[Node] = [
-        # Controller manager for both arm and hand
+        # Controller manager for both arm and hand with ROS2 Cartesian control
         Node(
             package='controller_manager',
             executable='ros2_control_node',
@@ -244,7 +276,7 @@ def launch_setup(context, *args, **kwargs) -> List[Node]:
 
 
 def generate_launch_description() -> LaunchDescription:
-    """Generate launch description for integrated Piper arm and Inspire hand system."""
+    """Generate launch description for integrated Piper arm and Inspire hand system with ROS2 Cartesian control."""
     # Declare arguments
     can_interface_arg = DeclareLaunchArgument(
         'can_interface',

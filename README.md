@@ -29,10 +29,16 @@ ROS 2 package that provides launch files, controller configurations, and robot d
 
 ## Launch Modes
 
-### Main System Launch
-Launch the complete integrated arm-hand system:
+### Main System Launch (ROS2 Controllers)
+Launch the complete integrated arm-hand system with ROS2 Cartesian motion controller:
 ```bash
-ros2 launch piper_arm_inspire_hand_bringup piper_arm_inspire_hand.launch.py
+ros2 launch piper_arm_inspire_hand_bringup piper_arm_inspire_hand_cartesian.launch.py
+```
+
+### Native Cartesian Control Launch
+Launch the integrated system with native hardware Cartesian control:
+```bash
+ros2 launch piper_arm_inspire_hand_bringup piper_arm_inspire_hand_native_cartesian.launch.py
 ```
 
 ### Display Launch (Visualization Only)
@@ -50,23 +56,57 @@ All launch files support the following arguments:
 - `hand_side`: Hand configuration: "left" or "right" (default: "left")
 
 ### Examples
+
+#### ROS2 Controller-based Launch
 ```bash
 # Physical system with custom interfaces
-ros2 launch piper_arm_inspire_hand_bringup piper_arm_inspire_hand.launch.py \
+ros2 launch piper_arm_inspire_hand_bringup piper_arm_inspire_hand_cartesian.launch.py \
   can_interface:=can1 serial_port:=/dev/ttyUSB1
 
 # Right hand configuration
-ros2 launch piper_arm_inspire_hand_bringup piper_arm_inspire_hand.launch.py hand_side:=right
+ros2 launch piper_arm_inspire_hand_bringup piper_arm_inspire_hand_cartesian.launch.py hand_side:=right
 
 # Simulation mode (no physical hardware)
-ros2 launch piper_arm_inspire_hand_bringup piper_arm_inspire_hand.launch.py use_mock_hardware:=true
+ros2 launch piper_arm_inspire_hand_bringup piper_arm_inspire_hand_cartesian.launch.py use_mock_hardware:=true
+```
+
+#### Native Cartesian Control Launch
+```bash
+# Physical system with native hardware control
+ros2 launch piper_arm_inspire_hand_bringup piper_arm_inspire_hand_native_cartesian.launch.py \
+  can_interface:=can1 serial_port:=/dev/ttyUSB1
+
+# Right hand configuration with custom speed
+ros2 launch piper_arm_inspire_hand_bringup piper_arm_inspire_hand_native_cartesian.launch.py \
+  hand_side:=right speed:=25
+
+# Different gripper mapping
+ros2 launch piper_arm_inspire_hand_bringup piper_arm_inspire_hand_native_cartesian.launch.py \
+  gripper_mapping:=gripper_joint_mapping_2finger.yaml
 ```
 
 ## Controllers
+
+### ROS2 Controller-based System (`piper_arm_inspire_hand_cartesian.launch.py`)
 The system starts with:
 - **joint_state_broadcaster**: Publishes joint states for both arm and hand
-- **agilex_piper_cartesian_motion_controller**: Cartesian space motion control for the arm
+- **agilex_piper_cartesian_motion_controller**: ROS2 Cartesian space motion control for the arm
 - **inspire_rh56_hand_joint_position_controller**: Direct position control for hand joints
+- **agilex_piper_gpio_controller**: Extended arm features and status monitoring
+
+### Native Cartesian Control System (`piper_arm_inspire_hand_native_cartesian.launch.py`)
+The system starts with:
+- **joint_state_broadcaster**: Publishes joint states for both arm and hand
+- **agilex_piper_gpio_controller**: Native hardware Cartesian control and status monitoring
+- **inspire_rh56_hand_joint_position_controller**: Direct position control for hand joints
+- **pose_to_gpio_converter**: Converts PoseStamped messages to hardware control commands
+- **pose_link_projector**: Projects TCP poses to tool0 for hardware control
+
+Key differences:
+- **Native control** uses hardware-level Cartesian control (motion_mode=0) for potentially better performance
+- **ROS2 control** uses software-based Cartesian motion planning and control
+- **Native control** requires physical hardware (no mock hardware support)
+- **Native control** provides direct PoseStamped message interface via `/agilex_piper_gpio_controller/target_pose`
 
 ## Robot Descriptions
 Complete robot URDF files in `urdf/`:
@@ -75,7 +115,10 @@ Complete robot URDF files in `urdf/`:
 - `flange_macro.xacro`: Custom flange for mounting interface
 
 ## Testing
+
 ### Manual Commands
+
+#### ROS2 Controller-based System
 **Arm Cartesian Control:**
 ```bash
 ros2 topic pub --once /agilex_piper_cartesian_motion_controller/target_frame geometry_msgs/msg/PoseStamped "{
@@ -87,13 +130,38 @@ ros2 topic pub --once /agilex_piper_cartesian_motion_controller/target_frame geo
 }"
 ```
 
-**Hand Position Control:**
+#### Native Cartesian Control System
+**Arm Native Cartesian Control:**
+```bash
+# Primary interface - TCP pose (automatically projected to tool0)
+ros2 topic pub --once /agilex_piper_gpio_controller/target_pose geometry_msgs/msg/PoseStamped "{
+  header: {frame_id: 'base_link'},
+  pose: {
+    position: {x: 0.2, y: 0.0, z: 0.2},
+    orientation: {x: 0.0, y: 1.0, z: 0.0, w: 0.0}
+  }
+}"
+
+# Change motion speed dynamically
+ros2 topic pub --once /agilex_piper_gpio_controller/commands control_msgs/msg/DynamicInterfaceGroupValues "{
+  interface_groups: ['arm_motion_mode'],
+  interface_values: [{interface_names: ['speed'], values: [75.0]}]
+}"
+
+# Monitor current pose and arm status
+ros2 topic echo /agilex_piper_gpio_controller/gpio_states
+```
+
+#### Hand Position Control (Both Systems)
 ```bash
 # Open hand
 ros2 topic pub --once /inspire_rh56_hand_joint_position_controller/commands std_msgs/msg/Float64MultiArray "{data: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}"
 
 # Close hand
 ros2 topic pub --once /inspire_rh56_hand_joint_position_controller/commands std_msgs/msg/Float64MultiArray "{data: [1.3, 0.6, 1.4, 1.4, 1.4, 1.4]}"
+
+# Gripper interface
+ros2 action send_goal /hand_gripper_cmd control_msgs/action/ParallelGripperCommand "{command: {position: [0.025], effort: [10.0]}}"
 ```
 
 ## Introspection
