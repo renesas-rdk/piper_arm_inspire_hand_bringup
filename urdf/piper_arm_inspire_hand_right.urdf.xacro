@@ -15,6 +15,8 @@
   <xacro:arg name="serial_port" default="/dev/ttyUSB0"/>
   <xacro:arg name="baudrate" default="115200"/>
   <xacro:arg name="use_mock_hardware" default="false"/>
+  <xacro:arg name="motion_mode" default="1"/>
+  <xacro:arg name="speed" default="50"/>
   <xacro:arg name="prefix" default=""/>
 
   <!-- World link for fixing robot to ground -->
@@ -44,6 +46,8 @@
     can_interface="$(arg can_interface)"
     use_mock_hardware="$(arg use_mock_hardware)"
     include_gripper="false"
+    motion_mode="$(arg motion_mode)"
+    speed="$(arg speed)"
     prefix="$(arg prefix)"/>
 
   <!-- Add ros2_control for the hand -->
