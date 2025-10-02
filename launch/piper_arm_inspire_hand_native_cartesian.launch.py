@@ -24,6 +24,8 @@ This launch file starts:
 - robot_state_publisher: Publishes TF transforms from combined URDF
 - joint_state_broadcaster: Publishes joint states from both arm and hand hardware
 - gpio_controller: Provides extended arm features with native Cartesian control (administrative control, pose feedback, status monitoring)
+- pose_link_projector (forward): Converts TCP pose to tool0 pose for arm control
+- pose_link_projector (feedback): Converts tool0 GPIO states to TCP current pose
 - pose_to_gpio_converter: Converts PoseStamped messages to GPIO controller commands for easy interface
 - hand_position_controller: Provides direct position commands for hand joints
 - hand_gripper_action_adapter: Converts gripper commands to hand joint positions
@@ -35,6 +37,10 @@ Key differences from ROS2 controller-based launch:
 - Includes pose_to_gpio_converter for easy PoseStamped message interface
 - Pose commands can be sent via standard geometry_msgs/PoseStamped messages
 - Suitable for applications requiring hardware-level Cartesian control with integrated hand
+
+Data flow with integrated hand:
+  Command:  /target_pose (TCP) -> tcp_to_tool0_projector -> /tool0_target_pose -> pose_to_gpio_converter -> GPIO
+  Feedback: GPIO states (tool0) -> tool0_to_tcp_projector -> /current_pose (TCP)
 
 Parameters:
   can_interface (string, default='can2'):
@@ -95,6 +101,9 @@ Test native Cartesian control commands for the arm:
 
   # Monitor current pose and arm status
   ros2 topic echo /agilex_piper_gpio_controller/gpio_states
+
+  # Monitor current TCP pose (automatically converted from tool0)
+  ros2 topic echo /agilex_piper_gpio_controller/current_pose
 
   # Enable/disable arm
   ros2 topic pub --once /agilex_piper_gpio_controller/commands
@@ -244,7 +253,7 @@ def launch_setup(context, *args, **kwargs) -> List[Node]:
                 '--controller-manager', '/controller_manager',
             ],
         ),
-        # Pose link projector for TCP to tool0 transformation (with hand attached)
+        # Pose link projector for TCP to tool0 transformation (forward - with hand attached)
         Node(
             package='agilex_piper_utils',
             executable='pose_link_projector',
@@ -258,6 +267,23 @@ def launch_setup(context, *args, **kwargs) -> List[Node]:
             remappings=[
                 ('~/in/pose', '/agilex_piper_gpio_controller/target_pose'),
                 ('~/out/pose', '/tool0_target_pose'),  # Feeds pose_to_gpio_converter
+            ],
+        ),
+        # Pose link projector for tool0 to TCP transformation (feedback - with hand attached)
+        Node(
+            package='agilex_piper_utils',
+            executable='pose_link_projector',
+            name='tool0_to_tcp_projector',
+            output='screen',
+            parameters=[
+                {'base_frame': 'base_link'},
+                {'source_link': 'tool0'},        # Tool0 link (arm flange)
+                {'target_link': 'tcp'},          # TCP link (end of hand)
+                {'interface_group': 'arm_current_pose'},
+            ],
+            remappings=[
+                ('~/in/gpio_states', '/agilex_piper_gpio_controller/gpio_states'),
+                ('~/out/pose', '/agilex_piper_gpio_controller/current_pose'),
             ],
         ),
         # Pose to GPIO converter for easy Cartesian control
