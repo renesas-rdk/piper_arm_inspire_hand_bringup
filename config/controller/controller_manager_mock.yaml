@@ -3,7 +3,7 @@
 
 controller_manager:
   ros__parameters:
-    update_rate: 100  # Hz - Main control loop frequency
+    update_rate: 50  # Hz - Main control loop frequency
 
     # Use the ROS 2 parameter server for configuration
     use_sim_time: false
