@@ -40,7 +40,11 @@
         "backgroundColor": "#272727"
       },
       "transforms": {},
-      "topics": {},
+      "topics": {
+        "/robot_description": {
+          "visible": true
+        }
+      },
       "layers": {
         "grid": {
           "visible": true,
