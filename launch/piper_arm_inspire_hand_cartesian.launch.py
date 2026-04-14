@@ -252,7 +252,7 @@ def launch_setup(context, *args, **kwargs) -> List[Node]:
         ),
         # Hand gripper action adapter for gripper command interface
         Node(
-            package='inspire_rh56_hand_utils',
+            package='dexhand_utils',
             executable='hand_gripper_action_adapter',
             name='hand_gripper_action_adapter',
             output='screen',
