@@ -1,5 +1,5 @@
 # *********************************************************************************************************************
-# Copyright [2025] Renesas Electronics Corporation and/or its licensors. All Rights Reserved.
+# Copyright [2026] Renesas Electronics Corporation and/or its licensors. All Rights Reserved.
 #
 # The contents of this file (the "contents") are proprietary and confidential to Renesas Electronics Corporation
 # and/or its licensors ("Renesas") and subject to statutory and contractual protections.
