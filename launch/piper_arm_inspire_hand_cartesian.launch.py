@@ -52,8 +52,9 @@ Parameters:
   hand_side (string, default='left'):
     Which hand to control: 'left' or 'right'.
 
-  gripper_mapping (string, default='gripper_joint_mapping_3finger.yaml'):
-    Gripper mapping configuration file for hand gripper interface.
+  gripper_mapping (string, default='rh56_gripper_joint_mapping.yaml'):
+    Multi-profile gripper mapping file (config/ in dexhand_utils) holding all grasp profiles
+    (full_hand, three_fingers, pinch). Switch the active profile at runtime via the set_grasp_profile topic.
 
 Usage:
   # For physical robot with CAN and serial interfaces:
@@ -66,9 +67,10 @@ Usage:
   # For SIMULATION/TESTING without physical hardware (RECOMMENDED for testing):
   ros2 launch piper_arm_inspire_hand_bringup piper_arm_inspire_hand_cartesian.launch.py use_mock_hardware:=true
 
-  # Use different gripper configurations:
-  ros2 launch piper_arm_inspire_hand_bringup piper_arm_inspire_hand_cartesian.launch.py gripper_mapping:=gripper_joint_mapping_2finger.yaml
-  ros2 launch piper_arm_inspire_hand_bringup piper_arm_inspire_hand_cartesian.launch.py gripper_mapping:=gripper_joint_mapping_3finger.yaml
+  # Gripper mapping is a single multi-profile file (default rh56_gripper_joint_mapping.yaml);
+  # switch the active grasp profile (full_hand / three_fingers / pinch) at runtime via the
+  # set_grasp_profile topic:
+  ros2 topic pub -1 /set_grasp_profile std_msgs/msg/String "{data: 'pinch'}"
 
   Then connect Foxglove Studio to ws://<foxglove_bridge_ip>:8765
 
@@ -95,10 +97,10 @@ Test hand commands:
   ros2 topic pub --once /inspire_rh56_hand_joint_position_controller/commands std_msgs/msg/Float64MultiArray "{data: [1.3, 0.6, 0.0, 0.0, 1.4, 1.4]}"
 
   # Use standard gripper action interface:
-  ros2 action send_goal /hand_gripper_cmd control_msgs/action/ParallelGripperCommand "{command: {position: [0.025], effort: [10.0]}}"
+  ros2 action send_goal /gripper_cmd control_msgs/action/ParallelGripperCommand "{command: {position: [0.025], effort: [10.0]}}"
 
   # Or use simple topic interface:
-  ros2 topic pub /hand_gripper_command control_msgs/msg/GripperCommand "{position: 0.03, max_effort: 10.0}"
+  ros2 topic pub /gripper_command control_msgs/msg/GripperCommand "{position: 0.03, max_effort: 10.0}"
 
 Or use Foxglove Studio's native publisher panel for interactive control.
 
@@ -310,8 +312,10 @@ def generate_launch_description() -> LaunchDescription:
 
     gripper_mapping_arg = DeclareLaunchArgument(
         'gripper_mapping',
-        default_value='gripper_joint_mapping_3finger.yaml',
-        description='Gripper mapping configuration: gripper_joint_mapping_3finger.yaml or gripper_joint_mapping_2finger.yaml'
+        default_value='rh56_gripper_joint_mapping.yaml',
+        description='Multi-profile gripper mapping file (config/ in dexhand_utils); holds all grasp '
+                    'profiles (full_hand, three_fingers, pinch). Select the active profile at runtime '
+                    'by publishing the profile name on the set_grasp_profile topic.'
     )
 
     return LaunchDescription([

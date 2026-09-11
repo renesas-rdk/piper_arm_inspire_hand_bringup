@@ -55,6 +55,11 @@ All launch files support the following arguments:
 - `use_mock_hardware`: Use mock hardware for testing (default: "false")
 - `hand_side`: Hand configuration: "left" or "right" (default: "left")
 
+The Cartesian and native Cartesian launches additionally support:
+- `gripper_mapping`: Multi-profile gripper mapping file in `dexhand_utils/config/`
+  (default: "rh56_gripper_joint_mapping.yaml"). Holds all grasp profiles; select the active
+  one at runtime via the `set_grasp_profile` topic (see [Gripper Command Interface](#gripper-command-interface--grasp-profiles)).
+
 ### Examples
 
 #### ROS2 Controller-based Launch
@@ -79,10 +84,29 @@ ros2 launch piper_arm_inspire_hand_bringup piper_arm_inspire_hand_native_cartesi
 # Right hand configuration with custom speed
 ros2 launch piper_arm_inspire_hand_bringup piper_arm_inspire_hand_native_cartesian.launch.py \
   hand_side:=right speed:=25
+```
 
-# Different gripper mapping
-ros2 launch piper_arm_inspire_hand_bringup piper_arm_inspire_hand_native_cartesian.launch.py \
-  gripper_mapping:=gripper_joint_mapping_2finger.yaml
+## Gripper Command Interface & Grasp Profiles
+Both hardware launches start the `dexhand_utils` `hand_gripper_action_adapter` node, which
+maps a single gripper width command to the 6 hand joints using a **multi-profile** mapping
+file (`dexhand_utils/config/rh56_gripper_joint_mapping.yaml`, selected via the `gripper_mapping`
+launch argument). The available grasp profiles are:
+
+- `full_hand`: 5-finger power grasp; all five fingers participate (max width 0.080 m)
+- `three_fingers`: 3-finger tripod grasp using thumb + index + middle (max width 0.060 m)
+- `pinch`: 2-finger parallel/pinch grasp using thumb + index (max width 0.060 m)
+
+The active profile starts at `default_profile` (`full_hand`) and can be switched at
+runtime — no restart — by publishing the profile name on the `set_grasp_profile` topic:
+```bash
+# Switch the active grasp profile
+ros2 topic pub -1 /set_grasp_profile std_msgs/msg/String "{data: 'three_fingers'}"
+
+# Simple gripper command (width in meters, effort in N) — no action feedback
+ros2 topic pub -1 /gripper_command control_msgs/msg/GripperCommand "{position: 0.03, max_effort: 10.0}"
+
+# Gripper command via action (with feedback)
+ros2 action send_goal /gripper_cmd control_msgs/action/ParallelGripperCommand "{command: {position: [0.025], effort: [10.0]}}"
 ```
 
 ## Controllers
@@ -161,7 +185,7 @@ ros2 topic pub --once /inspire_rh56_hand_joint_position_controller/commands std_
 ros2 topic pub --once /inspire_rh56_hand_joint_position_controller/commands std_msgs/msg/Float64MultiArray "{data: [1.3, 0.6, 1.4, 1.4, 1.4, 1.4]}"
 
 # Gripper interface
-ros2 action send_goal /hand_gripper_cmd control_msgs/action/ParallelGripperCommand "{command: {position: [0.025], effort: [10.0]}}"
+ros2 action send_goal /gripper_cmd control_msgs/action/ParallelGripperCommand "{command: {position: [0.025], effort: [10.0]}}"
 ```
 
 ## Introspection
